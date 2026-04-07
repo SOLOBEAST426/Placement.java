@@ -1,0 +1,145 @@
+import java.io.*;
+import java.util.*;
+
+public class VotingSystem {
+
+    static HashMap<String, Integer> votes = new HashMap<>();
+    static HashSet<String> voters = new HashSet<>();
+    static Scanner sc = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        while (true) {
+            System.out.println("\n--- Voting System ---");
+            System.out.println("1. Add Candidate");
+            System.out.println("2. Vote");
+            System.out.println("3. Results");
+            System.out.println("4. Winner");
+            System.out.println("5. Save");
+            System.out.println("6. Exit");
+            System.out.print("Choice: ");
+
+            int choice;
+            try {
+                choice = sc.nextInt();
+                sc.nextLine(); // Consume newline
+            } catch (Exception e) {
+                System.out.println("Error: Please enter a number.");
+                sc.nextLine(); // Clear buffer
+                continue;
+            }
+
+            switch (choice) {
+                case 1: addCandidate(); break;
+                case 2: vote(); break;
+                case 3: showResults(); break;
+                case 4: announceWinner(); break; // Fixed method name
+                case 5: save(); break;
+                case 6: System.out.println("Goodbye!"); System.exit(0);
+                default: System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    static void addCandidate() {
+        System.out.print("Enter candidate name: ");
+        String name = sc.nextLine().trim();
+
+        if (name.isEmpty()) {
+            System.out.println("Name cannot be empty!");
+        } else if (votes.containsKey(name)) {
+            System.out.println("Candidate already exists!");
+        } else {
+            votes.put(name, 0);
+            System.out.println("Candidate added!");
+        }
+    }
+
+    static void vote() {
+        if (votes.isEmpty()) {
+            System.out.println("No candidates available to vote for!");
+            return;
+        }
+
+        System.out.print("Enter voter ID: ");
+        String id = sc.nextLine().trim();
+
+        if (voters.contains(id)) {
+            System.out.println("Access Denied: This ID has already voted!");
+            return;
+        }
+
+        System.out.print("Enter candidate name: ");
+        String candidate = sc.nextLine().trim();
+
+        if (!votes.containsKey(candidate)) {
+            System.out.println("Invalid candidate!");
+            return;
+        }
+
+        votes.put(candidate, votes.get(candidate) + 1);
+        voters.add(id);
+        System.out.println("Vote recorded successfully!");
+    }
+
+    static void showResults() {
+        if (votes.isEmpty()) {
+            System.out.println("No candidates registered.");
+            return;
+        }
+        System.out.println("\n--- Current Standings ---");
+        for (Map.Entry<String, Integer> entry : votes.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue() + " votes");
+        }
+    }
+
+    public static void announceWinner() {
+        if (votes.isEmpty()) {
+            System.out.println("No candidates registered!");
+            return;
+        }
+
+        int maxVotes = 0;
+        // Check if any votes have actually been cast
+        boolean votesCast = false;
+        for (int v : votes.values()) {
+            if (v > 0) {
+                votesCast = true;
+                if (v > maxVotes) maxVotes = v;
+            }
+        }
+
+        if (!votesCast) {
+            System.out.println("No votes have been cast yet.");
+            return;
+        }
+
+        ArrayList<String> winners = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : votes.entrySet()) {
+            if (entry.getValue() == maxVotes) {
+                winners.add(entry.getKey());
+            }
+        }
+
+        if (winners.size() > 1) {
+            System.out.println("🤝 It's a DRAW between:");
+            for (String name : winners) {
+                System.out.println("- " + name);
+            }
+            System.out.println("Total votes: " + maxVotes);
+        } else {
+            System.out.println("🏆 Winner: " + winners.get(0) + " with " + maxVotes + " votes!");
+        }
+    }
+
+    static void save() {
+        try (FileWriter fw = new FileWriter("results.txt")) {
+            fw.write("--- Voting Results ---\n");
+            for (String c : votes.keySet()) {
+                fw.write(c + " : " + votes.get(c) + "\n");
+            }
+            System.out.println("Results saved to results.txt!");
+        } catch (IOException e) {
+            System.out.println("Error saving file: " + e.getMessage());
+        }
+    }
+}
